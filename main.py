@@ -10,6 +10,7 @@ import vectorizer
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
+from pathlib import Path
 from subprocess import call
 
 env = {}
@@ -20,6 +21,7 @@ data_files_info = None
 normalized_frequencies = []
 model = None
 env['id'] = str(random.randint(1000000,9000000))
+env['norm_ex'] = 1
 fig = None
 photo_index = 0
 
@@ -48,8 +50,8 @@ def load_files(data_files_info):
 
 def normalize_over_axis1(arr2d):
     for i in range(arr2d.shape[0]):
-        hori_sum = sum(arr2d[i])
-        if hori_sum!= 0 :arr2d[i] = arr2d[i]/hori_sum
+        hori_sum = sum(arr2d[i]**env['norm_ex'])
+        if hori_sum!= 0 :arr2d[i] = (arr2d[i]**env['norm_ex'])/hori_sum
 
 def get_normalized_frequencies_for_file(file):
     freqs = []
@@ -93,26 +95,36 @@ def auto_train(model_info, data_files_info, epochs, plot, new_model=False, reloa
     global  photo_index
     photo_index = 0
 
+    env['id'] = str(int(time.time() * 1000))
+
     if (new_model):
         model = build_model(model_info)
     epoch_count = current_epoch
+
+
     fig = plt.figure()
     for i in epochs:
-        if peek:
-            plot_files(files,data_files_info,model,model_info,.1,"old_data "+str(epoch_count))
+
+        caption = "epoch:"+str(epoch_count)+" reload:"+str(reload)+" norm_ex:"+str(env['norm_ex'])
+
+        if peek and  reload:
+            plot_files(files,data_files_info,model,model_info,.1,"old_data "+caption)
         if reload:
             reload_n_process_data(data_files_info) # files, normalized_frequencies assigned
         if plot:
-            plot_files(files,data_files_info,model,model_info,.1,"new_data "+str(epoch_count))
+            plot_files(files,data_files_info,model,model_info,.1,"new_data "+caption)
         if(i != 0):
             train(model, normalized_frequencies, i)
             epoch_count+=i
 
     if plot:
-        plot_files(files,data_files_info,model,model_info,.1,str(epoch_count))
-
+        caption = "epoch:" + str(epoch_count) + " reload:" + str(reload) + " norm_ex:" + str(env['norm_ex'])
+        plot_files(files,data_files_info,model,model_info,.1,caption)
 
     call("ffmpeg -framerate 1 -i "+env['id']+"_%12d.png "+env['id']+".mp4", cwd="./figures", shell=True)
+    call("rm *.png", cwd="./figures", shell=True)
+
+    model.save("./models/"+env['id'])
 
 
 def plot_files(files,data_files_info,model,model_info,perc = .1,caption = ""):
@@ -126,7 +138,7 @@ def plot_files(files,data_files_info,model,model_info,perc = .1,caption = ""):
         X,Y = [i[0] for i in points], [i[1] for i in points]
         plt.scatter(X, Y, color = data_files_info[file_index]['color'], s=scatter_point_size, alpha=.8)
 
-
+    Path("./figures").mkdir(parents=True, exist_ok=True)
     plt.figtext(0.5, 0.01, caption, wrap=True, horizontalalignment='center', fontsize=12)
     plt.savefig("figures/"+env['id'] +"_"+ str(photo_index).zfill(12))
     photo_index +=1
@@ -134,14 +146,18 @@ def plot_files(files,data_files_info,model,model_info,perc = .1,caption = ""):
 ########################################################################################################################
 
 data_files_info = [
-                dict    (file ="data/bat_sars.fasta", len_mean = 5000, len_sd = 1000, count = 1849, color ='r'),
+                dict    (file ="data/bat_sars.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='r'),
                 dict    (file ="data/covid_19.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='g'),
                 dict    (file ="data/sars.fasta",     len_mean = 5000, len_sd = 1000, count = 1000, color ='b'),
+
+                # dict(file="data/escherichia coli.fasta", len_mean=5000, len_sd=1000, count=1000, color='r'),
+                # dict(file="data/pseudomonas aeruginosa.fasta", len_mean=5000, len_sd=1000, count=1000, color='g'),
+                # dict(file="data/staphylococcus aureus.fasta", len_mean=5000, len_sd=1000, count=1000, color='b'),
 ]
 
 model_info = (
-                [32,2,32],      # layers
-                1               # autoencoder output layer index
+                [32,16,2,16,32],      # layers
+                2               # autoencoder output layer index
 )
 
 scatter_point_size = 8
@@ -153,33 +169,11 @@ model = build_model(model_info)
 
 #epochs = [0,0,1,10,100,1,1,1,500,1,1,1,1,11,1000,1,1,1,1,1001,1500,10000,1,50000,1,1,1,1,1,1,1,1,1,50000,1,50000,50000,50000,50000,50000]
 
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
+env['norm_ex'] = 1
+epochs = [0,4,10,6]+[10]*8+[10]*30+[25]*1000#+[50]*200
 auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=False, peek=True)
 
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
-auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=True, peek=True)
-
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
-auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=True, peek=True)
-
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
-auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=True, peek=True)
-
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
-auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=True, peek=True)
-
-
-env['id']  = str(int(time.time()*1000))
-epochs = [0,4,10,6]+[10]*8+[10]*90+[25]*200
-auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=True, peek=True)
+env['norm_ex'] = 2
+epochs = [0,4,10,6]+[10]*8+[10]*30+[25]*1000#+[50]*200
+auto_train(model_info, data_files_info, epochs=epochs, plot=True, new_model=True, reload=False, peek=True)
 
