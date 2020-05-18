@@ -35,7 +35,7 @@ def load_files(data_files_info):
 
     for i in range(data_files_count):
         data_file = data_files_info[i]
-        raw_data_points = vectorizer.split_n_count_fasta(
+        raw_data_points = vectorizer.split_n_count_fasta4(
             data_file['file'],
             data_file['len_mean'],
             data_file['len_sd'],
@@ -165,8 +165,8 @@ data_files_info = [
 
 model_info = (
                 #[32,16,6,2,6,16,32],
-                [32,2,32],      # layers
-                1               # autoencoder output layer index
+                [128,32,2,32,128],      # layers
+                2               # autoencoder output layer index
 )
 
 scatter_point_size = 8
@@ -176,17 +176,10 @@ reload_n_process_data(data_files_info)
 
 model = build_model(model_info)
 
-#epochs = [0,0,1,10,100,1,1,1,500,1,1,1,1,11,1000,1,1,1,1,1001,1500,10000,1,50000,1,1,1,1,1,1,1,1,1,50000,1,50000,50000,50000,50000,50000]
 
-#matplotlib.use('Qt5Agg')
 env['norm_ex'] = 1
 epochs = [0,4,10,6]+[10]*8+[10]*30+[250]*50#+[1000]*200+[10]*10+[4000]*25+[10]*10#+[50]*200
 auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, plot=True, new_model=True, reload=False, peek=True)
 
-model_info = (
-                #[32,16,6,2,6,16,32],
-                [32,16,2,16,32],      # layers
-                2               # autoencoder output layer index
-)
 
 auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, plot=True, new_model=True, reload=False, peek=True)
