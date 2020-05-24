@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 from keras import backend as K
 from keras.models import load_model
+import os
 import random
 import vectorizer
 import matplotlib
@@ -14,6 +15,7 @@ import time
 from pathlib import Path
 from subprocess import call
 from keras.models import load_model
+from itertools import groupby
 
 env = {}
 _normalized_frequencies_for_file_cache = {}
@@ -27,6 +29,38 @@ env['norm_ex'] = 1
 fig = None
 photo_index = 0
 
+colors = [
+ '#6BB930',
+ '#C6C032',
+ '#EDD2DB',
+ '#A3BCDB',
+ '#6D6D8A',
+ '#1481A9',
+ '#E68A9A',
+ '#03DBC4',
+ '#8C6E47',
+ '#E05C54',
+ '#BD871C',
+ '#428F57',
+ '#9BDA86',
+ '#9FDA0D',
+ '#3D3161',
+ '#ACA450',
+ '#E60D69',
+ '#818A5A',
+ '#188025',
+ '#3995F0',
+ '#3DEDF6',
+ '#6FB0D7',
+ '#2FD362',
+ '#A90805',
+ '#76DE44',
+ '#1E858E',
+ '#AE6F25',
+ '#AF9DF4',
+ '#2E3E70',
+ '#A86A61']
+
 ########################################################################################################################
 def load_files(data_files_info):
     data_files_count = len(data_files_info)
@@ -35,7 +69,7 @@ def load_files(data_files_info):
 
     for i in range(data_files_count):
         data_file = data_files_info[i]
-        raw_data_points = vectorizer.split_n_count_fasta4(
+        raw_data_points = vectorizer.split_n_count_fasta(
             data_file['file'],
             data_file['len_mean'],
             data_file['len_sd'],
@@ -110,7 +144,11 @@ def auto_train(model_info, data_files_info, epochs, plot, new_model=False, reloa
     fig = plt.figure()
     for i in epochs:
 
-        caption = "epoch:"+str(epoch_count)+" reload:"+str(reload)+" norm_ex:"+str(env['norm_ex'])
+        if i == 'm':
+            save_model(epoch_count)
+            continue
+
+        caption = "epoch:"+str(epoch_count)+" reload:"+str(reload)#+" norm_ex:"+str(env['norm_ex'])
 
         if peek and  reload:
             plot_files(files,data_files_info,model,model_info,plot_perc,"old_data "+caption)
@@ -126,11 +164,14 @@ def auto_train(model_info, data_files_info, epochs, plot, new_model=False, reloa
         caption = "epoch:" + str(epoch_count) + " reload:" + str(reload) + " norm_ex:" + str(env['norm_ex'])
         plot_files(files,data_files_info,model,model_info,plot_perc,caption)
 
-    call("ffmpeg -framerate 1 -i "+env['id']+"_%12d.png "+env['id']+".mp4", cwd="./figures", shell=True)
-    #call("rm *.png", cwd="./figures", shell=True)
+    save_video(env['id'])
+    save_model()
 
-    model.save("./models/"+env['id'])
+def delete_pngs():call("rm *.png", cwd="./figures", shell=True)
 
+def save_model(caption=""):model.save("./models/"+env['id']+" "+str(caption))
+
+def save_video(id):  call("ffmpeg -framerate 1 -i " + str(id) + "_%12d.png " + str(id) + ("_[" + "-".join([str(x) for x in model_info[0]]) + "]_") +str(int(time.time() * 1000))+ ".mp4", cwd="./figures", shell=True)
 
 def plot_files(files,data_files_info,model,model_info,perc = .1,caption = ""):
     global photo_index
@@ -148,29 +189,45 @@ def plot_files(files,data_files_info,model,model_info,perc = .1,caption = ""):
     plt.savefig("figures/"+env['id'] +"_"+ str(photo_index).zfill(12))
     photo_index +=1
     plt.show(block=False)
+
+def sum_epochs(epo = None):
+    if epo is None:epo =epochs
+    return sum(x for x in epo if x != 'm')
+
+def build_data_files_info(dir):
+    len_mean = 5000
+    len_sd = 1000
+    count = 500
+
+    files = os.listdir(dir)
+    data_files_info = [dict(file=dir+"/"+files[i], len_mean=len_mean, len_sd=len_sd, count=count, color=colors[i]) for i in range(len(files))]
+    return data_files_info
 ########################################################################################################################
 
 data_files_info = [
-                dict    (file ="data/bat_sars.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='r'),
-                dict    (file ="data/covid_19.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='g'),
-                dict    (file ="data/sars.fasta",     len_mean = 5000, len_sd = 1000, count = 1000, color ='b'),
-
-                dict(file="data/escherichia coli.fasta", len_mean=5000, len_sd=1000, count=1000, color='y'),
-                dict(file="data/pseudomonas aeruginosa.fasta", len_mean=5000, len_sd=1000, count=1000, color='k'),
-                dict(file="data/staphylococcus aureus.fasta", len_mean=5000, len_sd=1000, count=1000, color='c'),
-
-                dict(file="data/Chimeric_dengue_-virus.fasta", len_mean=5000, len_sd=1000, count=1000, color='#777777'),
-                dict(file="data/ebola_1976.fasta", len_mean=5000, len_sd=1000, count=1000, color='m'),
+                # dict    (file ="data/bat_sars.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='r'),
+                # dict    (file ="data/covid_19.fasta", len_mean = 5000, len_sd = 1000, count = 1000, color ='g'),
+                # dict    (file ="data/sars.fasta",     len_mean = 5000, len_sd = 1000, count = 1000, color ='b'),
+                #
+                # dict(file="data/escherichia coli.fasta", len_mean=5000, len_sd=1000, count=1000, color='y'),
+                # dict(file="data/pseudomonas aeruginosa.fasta", len_mean=5000, len_sd=1000, count=1000, color='k'),
+                # dict(file="data/staphylococcus aureus.fasta", len_mean=5000, len_sd=1000, count=1000, color='c'),
+                #
+                # dict(file="data/Chimeric_dengue_-virus.fasta", len_mean=5000, len_sd=1000, count=1000, color='#777777'),
+                # dict(file="data/ebola_1976.fasta", len_mean=5000, len_sd=1000, count=1000, color='m'),
 ]
 
 model_info = (
                 #[32,16,6,2,6,16,32],
-                [128,32,2,32,128],      # layers
+                [32,16,2,16,32],      # layers
                 2               # autoencoder output layer index
 )
 
 scatter_point_size = 8
 ########################################################################################################################
+
+
+data_files_info = build_data_files_info("data/21s")
 
 reload_n_process_data(data_files_info)
 
@@ -178,8 +235,8 @@ model = build_model(model_info)
 
 
 env['norm_ex'] = 1
-epochs = [0,4,10,6]+[10]*8+[10]*30+[250]*50#+[1000]*200+[10]*10+[4000]*25+[10]*10#+[50]*200
-auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, plot=True, new_model=True, reload=False, peek=True)
+
+epochs = [0,4,10,6,'m']+[10]*8+[10]*30+[250]*50+['m']+[1000]*30+['m']+[1000]*20#+[10]*10+[4000]*3+['m']+[10]*10+['m']#+[50]*200
 
 
-auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, plot=True, new_model=True, reload=False, peek=True)
+#auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, plot=True, new_model=True, reload=False, peek=True,plot_perc=.2)

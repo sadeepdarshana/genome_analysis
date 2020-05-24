@@ -47,3 +47,10 @@ def display_kmer_possibilities_given_a_vec32(k):
                                         get_3mer_given_its_vec64_index(vec32_index_i_could_be_3mer[i][1])
                                         ])
     return kmers
+
+import random
+def random_color(): return '#'+"".join([['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'][random.randint(0,15)] for i in range(6)])
+
+def random_colors(n):return [random_color() for i in range(n)]
+
+def msplits(f):return [sum(x) for x in [list(group) for k, group in groupby(f, lambda x: x == "m") if not k]]
