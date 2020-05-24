@@ -203,7 +203,7 @@ model_info = (
 data_files_info = build_data_files_info("data/the_selected_8")
 
 
-epochs = [20,'m']*10+[50]*10+[100]*10+[200]*10+[500]*10+['m']+[1000,'m']*20
+epochs = [20,'m']*10+[50]*10+[100]*10+[200,'m']*10+[500,'m']*10+['m']+[1000,'m']*20
 
 
 auto_train(model_info, data_files_info, epochs=epochs,current_epoch=0, new_model=True)
