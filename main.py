@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 from pathlib import Path
+
+from matplotlib.colors import ListedColormap
 from subprocess import call
 from keras.models import load_model
 from itertools import groupby
@@ -194,7 +196,10 @@ def plot_files(files, model, perc = .1, caption ="", intra_pos = True):
     sns.scatterplot(ax=axs[0],x='X', y='Y', hue='Sequence', data=df, edgecolor="none",alpha=1,hue_order=get_file_1st_names())
     axs[0].legend(bbox_to_anchor=(1.0, 1), loc=2, borderaxespad=1.)
 
-    sns.scatterplot(ax=axs[1],x='X', y='Y', hue='Mean Position', style='Sequence', data=df, edgecolor="none",alpha=1)
+    flatui = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71"]
+    my_cmap = ListedColormap(sns.color_palette(flatui).as_hex())
+
+    sns.scatterplot(ax=axs[1],x='X', y='Y', hue='Mean Position', style='Sequence', style_order= get_file_1st_names(), data=df, edgecolor="none",alpha=1 ,  palette = "gist_rainbow_r")
     axs[1].legend(bbox_to_anchor=(1.0, 1), loc=2, borderaxespad=1.)
 
     for ax in axs:
@@ -206,7 +211,7 @@ def plot_files(files, model, perc = .1, caption ="", intra_pos = True):
     #plt.title(caption)
     plt.savefig("figures/"+env['id'] +"_"+ str(photo_index).zfill(12), bbox_inches='tight')
     photo_index +=1
-    plt.show()
+    plt.show( cmap=plt.get_cmap("inferno"))
 
 def sum_epochs(epo = None): return sum(x for x in (epochs if epo is None else epo) if x != 'm')
 
