@@ -38,3 +38,9 @@ def process(input_path, k,epochs, activation, layers_sizes, output_path = None):
     dataset = pd.DataFrame({'x': r[:, 0], 'y': r[:, 1]}) if (r.shape[1] == 2) else pd.DataFrame({'x': r[:, 0], 'y': r[:, 1], 'z': r[:, 2]})
 
     if output_path: dataset.to_csv(output_path)
+
+    settings = {'input_path': [input_path], 'k': [k], 'epochs': [epochs], 'activation': [activation], 'layers_sizes': [layers_sizes],
+         'output_path': [output_path]}
+
+    pd.DataFrame(settings).to_csv('settings.csv', mode='a', header=False)
+
