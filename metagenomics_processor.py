@@ -5,15 +5,11 @@ import numpy as np
 import pyVectorizer
 from keras import backend as K
 import pandas as pd
-import plotly.express as px
-import matplotlib.pyplot as plt
-
 
 def normalize_over_axis1(arr2d):
     for i in range(arr2d.shape[0]):
         hori_sum = sum(arr2d[i])
         if hori_sum!= 0 :arr2d[i] = (arr2d[i])/hori_sum
-
 
 def build_model(layers_sizes, activation ):
     model = Sequential()
@@ -41,10 +37,4 @@ def process(input_path, k,epochs, layers_sizes, output_path = None):
     r=get_points(model,vectors)
     dataset = pd.DataFrame({'x': r[:, 0], 'y': r[:, 1]}) if (r.shape[1] == 2) else pd.DataFrame({'x': r[:, 0], 'y': r[:, 1], 'z': r[:, 2]})
 
-    # ax1 = dataset.plot.scatter(x='x', y='y', c='DarkBlue')
-    # plt.show()
-
-    if output_path:
-        dataset.to_csv(output_path)
-
-#process("./data/AAGA01.1.fsa_nt",3, [32,2,32], "./out.csv")
+    if output_path: dataset.to_csv(output_path)
