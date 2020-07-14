@@ -29,8 +29,8 @@ def get_points(model, vectors):
     points = mapping_function(vectors)[0]
     return points
 
-def process(input_path, k,epochs, layers_sizes, output_path = None):
-    model = build_model(layers_sizes,'sigmoid')
+def process(input_path, k,epochs, activation, layers_sizes, output_path = None):
+    model = build_model(layers_sizes,activation)
     vectors = np.array(pyVectorizer.vectorize_file(input_path, k)).astype(np.float32)
     normalize_over_axis1(vectors)
     train(model,epochs,vectors)
