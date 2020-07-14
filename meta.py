@@ -1,29 +1,21 @@
-import keras
-import numpy as np
-from celluloid import Camera
-from keras.models import Sequential
-from keras.layers.core import Dense
-from keras import backend as K
-from keras.models import load_model
-import os
 import random
-import pyVectorizer
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import time
 from pathlib import Path
-import Bio
-import vectorizer
 
-from matplotlib.colors import ListedColormap
-from subprocess import call
+import keras
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns;
+import vectorizer
+from keras import backend as K
+from keras.layers.core import Dense
+from keras.models import Sequential
 from keras.models import load_model
-from itertools import groupby
-import seaborn as sns; sns.set()
+from matplotlib.colors import ListedColormap
+
+sns.set()
 import pandas as pd
 from decimal import Decimal
-import glob
 
 env = {}
 _normalized_frequencies_for_file_cache = {}
@@ -81,10 +73,6 @@ def get_pos(file):
     for raw_data_point in file:
         pos.append(float(raw_data_point[2]+raw_data_point[3])/2)
     return pos
-
-def get_normalized_frequencies_for_files(files):
-    tpl = tuple([get_normalized_frequencies_for_file(file) for file in files])
-    return np.concatenate(tpl, axis=0)
 
 def reload_n_process_data(data_files_info):
     global files
@@ -146,14 +134,6 @@ def auto_train(data_files_info, epochs_list, model_info=None, plot=True, new_mod
             train(model, normalized_frequencies, i)
             epoch_count+=i
 
-    save_video(env['id'],epoch_count)
-    #shutdown_machine()
-    #delete_pngs()
-
-def delete_pngs():call("rm *.png", cwd="./figures", shell=True)
-
-def shutdown_machine():call("shutdown -s -f -t 00", cwd="./figures", shell=True)
-
 
 def pd_vstack(dfs):
     big_list = None
@@ -161,10 +141,6 @@ def pd_vstack(dfs):
         if big_list is None: big_list = i
         else:big_list = big_list.append(i, ignore_index=True)
     return big_list
-
-def save_model(epochs="", next_photo_index=""):model.save("./models/" + env['id'] + (("_" + str(epochs).zfill(12)) if epochs else "") + (("_" + str(next_photo_index).zfill(12)) if next_photo_index else ""))
-
-def save_video(id,epochs=""):  call("ffmpeg -framerate 1 -i " + str(id) + "_%12d.png " + str(id) + ("_[" + "-".join([str(x) for x in model_info]) + "]_") +str(int(time.time() * 1000))+"_"+str(epochs)+ ".mp4", cwd="./figures", shell=True)
 
 def plot_files(files, model, perc = .1, caption ="", intra_pos = True):
     global photo_index
@@ -215,22 +191,6 @@ def plot_files(files, model, perc = .1, caption ="", intra_pos = True):
     photo_index +=1
     plt.show( cmap=plt.get_cmap("inferno"))
 
-def sum_epochs(epo = None): return sum(x for x in (epochs if epo is None else epo) if x != 'm')
-
-def get_file_1st_names():return [x['file'].split("/")[-1].split(".")[0] for x in data_files_info]
-
-def restore_training(id,data_files_info,epochs_list):
-    start_epoch, photo_index = [int(x) for x in sorted(glob.glob("./models/" + str(id) + "*"))[-1].split("_")[1:]]
-    auto_train(data_files_info, epochs_list=epochs_list, start_epoch=start_epoch,use_model=str(sorted(glob.glob("./models/" + str(id) + "*"))[-1].split("\\")[-1]), new_model=False,start_photo_index = photo_index)
-
-def build_data_files_info(dir):
-    len_mean = 5000
-    len_sd = 1000
-    count = 1000
-
-    files = os.listdir(dir)
-    data_files_info = [dict(file=dir+"/"+files[i], len_mean=len_mean, len_sd=len_sd, count=count) for i in range(len(files))]
-    return data_files_info
 ########################################################################################################################
 
 model_info = (
@@ -245,14 +205,5 @@ model_info = (
 vectorizer_function = vectorizer.split_n_count_fasta
 
 
-data_files_info = build_data_files_info("data/the_original_3")
 
 activation = 'relu'
-
-
-#epochs = [20,'m']*10+[50]*10+[100]*10+[200,'m']*10+[500,'m']*10+['m']+[1000,'m']*50
-epochs = [10,'m']*5+[100,'m']*5+[100,'m']*15
-
-
-#restore_training(15903906621667,data_files_info,epochs)
-auto_train( data_files_info,model_info=model_info, epochs_list=epochs,start_epoch=0, new_model=True)
