@@ -29,7 +29,7 @@ def get_points(model, vectors):
     points = mapping_function(vectors)[0]
     return points
 
-def process(input_path, k,epochs, activation, layers_sizes, output_path = None):
+def process(input_path, k,epochs, activation, layers_sizes, output_path):
     model = build_model(layers_sizes,activation)
     vectors = np.array(pyVectorizer.vectorize_file(input_path, k)).astype(np.float32)
     normalize_over_axis1(vectors)
@@ -39,8 +39,8 @@ def process(input_path, k,epochs, activation, layers_sizes, output_path = None):
 
     if output_path: dataset.to_csv(output_path)
 
+    # Saving settings
     settings = {'input_path': [input_path], 'k': [k], 'epochs': [epochs], 'activation': [activation], 'layers_sizes': [layers_sizes],
          'output_path': [output_path]}
-
     pd.DataFrame(settings).to_csv('settings.csv', mode='a', header=False)
 
