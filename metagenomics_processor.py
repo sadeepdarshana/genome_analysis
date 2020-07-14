@@ -23,7 +23,6 @@ def build_model(layers_sizes, activation ):
     model.compile(loss='mse', optimizer=keras.optimizers.Adam())
     return model
 
-
 def train(model,epochs,vectors):
     model.fit(vectors,vectors,epochs=epochs)
 
@@ -34,18 +33,11 @@ def get_points(model, vectors):
     points = mapping_function(vectors)[0]
     return points
 
-
-
-
-
-
-
-
-def process(input_path, k, layers_sizes, output_path = None):
+def process(input_path, k,epochs, layers_sizes, output_path = None):
     model = build_model(layers_sizes,'sigmoid')
     vectors = np.array(pyVectorizer.vectorize_file(input_path, k)).astype(np.float32)
     normalize_over_axis1(vectors)
-    train(model,100,vectors)
+    train(model,epochs,vectors)
     r=get_points(model,vectors)
     dataset = pd.DataFrame({'x': r[:, 0], 'y': r[:, 1]}) if (r.shape[1] == 2) else pd.DataFrame({'x': r[:, 0], 'y': r[:, 1], 'z': r[:, 2]})
 
@@ -55,4 +47,4 @@ def process(input_path, k, layers_sizes, output_path = None):
     if output_path:
         dataset.to_csv(output_path)
 
-process("./data/AAGA01.1.fsa_nt",3, [32,2,32], "./out.csv")
+#process("./data/AAGA01.1.fsa_nt",3, [32,2,32], "./out.csv")
