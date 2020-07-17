@@ -18,5 +18,3 @@ def process(input_path, k, output_path):
 
     with open(output_path+"_acgt.json", 'w') as outfile:
         json.dump(acgt, outfile)
-
-t=process("./data/AAGA01.1.fsa_nt",3,'outtt')
