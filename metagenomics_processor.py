@@ -5,6 +5,8 @@ import numpy as np
 import pyVectorizer
 from keras import backend as K
 import pandas as pd
+import os.path
+from os import path
 
 def normalize_over_axis1(arr2d):
     for i in range(arr2d.shape[0]):
@@ -39,8 +41,20 @@ def process(input_path, k,epochs, activation, layers_sizes, output_path):
 
     if output_path: dataset.to_csv(output_path)
 
-    # Saving settings
-    settings = {'input_path': [input_path], 'k': [k], 'epochs': [epochs], 'activation': [activation], 'layers_sizes': [layers_sizes],
-         'output_path': [output_path]}
-    pd.DataFrame(settings).to_csv('settings.csv', mode='a', header=False)
+    x= layers_sizes[len(layers_sizes)//2]
+    layers_sizes[len(layers_sizes) // 2] = 'x'
 
+    # Saving settings
+    settings_path = 'settings.csv'
+    settings = {'FASTA File': [input_path.split("/")[-1].split('\\')[-1]],
+                'Iterations': [epochs],
+                'k in kmer': [k],
+                'layers_sizes': str(layers_sizes).replace("'","").replace(" ",""),
+                '2D': 'Yes' if x == 2 else "",
+                '3D': 'Yes' if x == 3 else "",
+                'Activation': [activation]
+                }
+
+    pd.DataFrame(settings).to_csv(settings_path, mode='a', header=not(path.exists(settings_path)),index=False)
+
+process("./data/AAGA01.1.fsa_nt",3, 5,'tanh',[32,2,32], "./out.csv")

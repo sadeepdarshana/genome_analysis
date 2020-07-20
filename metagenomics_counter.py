@@ -1,8 +1,6 @@
 import json
-
 import numpy as np
 import pyVectorizer
-import pandas as pd
 
 def process(input_path, k, output_path):
     vectors = np.array(pyVectorizer.vectorize_file(input_path, k)).astype(np.float32)
